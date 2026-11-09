@@ -1,0 +1,12 @@
+{
+  "name": "DarIA",
+  "slug": "daria",
+  "appDirectory": "DarIA",
+  "rootFeature": "ChatBot",
+  "networkingSources": "Packages/Networking/Sources/Networking",
+  "designSystemPackage": "Packages/DarIAUI",
+  "platforms": [
+    "iphone",
+    "ipad"
+  ]
+}
