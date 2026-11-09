@@ -37,6 +37,14 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSSectionHeader(_:)` | Header above a group of rows. |
 | `DSListRow(_:subtitle:showsChevron:)` | Row in a list. |
 | `DSCard { … }` | Groups content on a surface. |
+| `DSIconButton(systemImage:label:action:)` | Icon-only bar button, 44 pt target, tinted with `accent`. |
+| `DSChatBubble(_:sender:)` | Chat message. `.assistant` on `surface` (left), `.user` on `accent` (right). |
+| `DSComposer(_:message:canSend:labels:onAttach:onSend:)` | Message bar: attach, capsule field, send. |
+| `DSMenuPanel(width:) { … }` | Floating drop-down on `menu-surface` with `shadow-menu`. |
+| `DSMenuScrim(label:onDismiss:)` | Veil behind an open menu; tapping it closes the menu. |
+| `DSMenuRow(_:systemImage:showsDivider:action:)` | Menu entry with a trailing icon. |
+| `DSConnectionRow(_:detail:badge:isSelected:action:)` | Selectable connection with check mark and identity badge. |
+| `DSIdentityBadge(_:identity:size:)` / `DSIdentity` | Initial on the identity color of Claude, OpenAI, Gemini or a local machine. |
 
 New components go in `Sources/DarIAUI/Components/`, use only tokens, are `public` and include a `#Preview`. A component that shows text conforms to `DSLocalizableText`.
 
