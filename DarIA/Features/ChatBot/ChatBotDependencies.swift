@@ -5,11 +5,11 @@ import Foundation
 final class ChatBotDependencies {
     init() {}
 
-    func makeUseCase() -> any ChatBotUseCaseProtocol {
+    func chatBotUseCase() -> any ChatBotUseCaseProtocol {
         ChatBotUseCase()
     }
 
     func makeViewModel() -> ChatBotViewModel {
-        ChatBotViewModel(useCase: makeUseCase())
+        ChatBotViewModel(dependencies: self)
     }
 }

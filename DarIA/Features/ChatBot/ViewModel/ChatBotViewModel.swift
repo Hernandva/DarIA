@@ -21,10 +21,12 @@ final class ChatBotViewModel {
     var draft = ""
 
     private var openingMessages: [ChatMessageViewData] = []
-    private let useCase: any ChatBotUseCaseProtocol
+    private let dependencies: ChatBotDependencies
+    private let chatBotUseCase: any ChatBotUseCaseProtocol
 
-    init(useCase: any ChatBotUseCaseProtocol) {
-        self.useCase = useCase
+    init(dependencies: ChatBotDependencies) {
+        self.dependencies = dependencies
+        self.chatBotUseCase = dependencies.chatBotUseCase()
     }
 
     var selectedConnection: ConnectionViewData? {
@@ -48,7 +50,7 @@ final class ChatBotViewModel {
         guard state == .idle else { return }
         state = .loading
         do {
-            let data = try await useCase.execute()
+            let data = try await chatBotUseCase.execute()
             openingMessages = data.messages
             messages = data.messages
             connections = data.connections
@@ -93,7 +95,7 @@ final class ChatBotViewModel {
         isSending = true
         defer { isSending = false }
         do {
-            let answer = try await useCase.reply(to: text, connectionID: connection.id)
+            let answer = try await chatBotUseCase.reply(to: text, connectionID: connection.id)
             messages.append(ChatMessageViewData(text: answer, sender: .assistant))
         } catch {
             messages.append(ChatMessageViewData(text: error.localizedDescription, sender: .assistant))
