@@ -2,7 +2,7 @@ import Foundation
 
 protocol ChatUseCaseProtocol: Sendable {
     /// Returns only the data of the response. The view model adds it to its `ChatViewData`.
-    func execute() async throws -> ChatViewData.Content
+    func execute() async throws -> ChatViewData.Conversation
 }
 
 /// Business logic of Chat.
@@ -14,7 +14,12 @@ struct ChatUseCase: ChatUseCaseProtocol {
     @MainActor
     init(dependencies: ChatDependencies) {}
 
-    func execute() async throws -> ChatViewData.Content {
-        ChatViewData.Content()
+    /// Starts an empty conversation with the default connection until a connections repository exists.
+    func execute() async throws -> ChatViewData.Conversation {
+        ChatViewData.Conversation(
+            connection: ChatViewData.Connection(name: "Claude", kind: .cloud),
+            startedAt: Date(),
+            messages: []
+        )
     }
 }
