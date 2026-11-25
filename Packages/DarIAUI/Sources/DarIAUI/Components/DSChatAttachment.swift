@@ -1,42 +1,36 @@
 import SwiftUI
 
-/// Image or file attached to a chat message, shown as a tile with its file name.
+/// Image attached to a chat message. It keeps its aspect ratio inside a 210 × 280 pt box and aligns itself
+/// to its side. `.localized(_:)` localises its accessibility label.
 public struct DSChatAttachment: View, DSLocalizableText {
-    /// File name shown under the icon.
+    /// Accessibility label, e.g. «Attached image».
     public var text: String
+    private let image: Image
     private let role: DSChatRole
 
-    public init(_ fileName: String = "", role: DSChatRole = .outgoing) {
-        self.text = fileName
+    public init(image: Image, label: String = "", role: DSChatRole = .outgoing) {
+        self.image = image
+        self.text = label
         self.role = role
     }
 
     public var body: some View {
-        VStack(spacing: DSSpacing.small) {
-            Image(systemName: "photo")
-                .font(.system(size: Self.iconSize, weight: .light))
-                .accessibilityHidden(true)
-            Text(text)
-                .font(DSFont.footnote)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .padding(.horizontal, DSSpacing.space3)
-        }
-        .foregroundStyle(DSPalette.onIdentity)
-        .frame(width: Self.size.width, height: Self.size.height)
-        .background(DSPalette.moss, in: RoundedRectangle(cornerRadius: DSRadius.radiusBubble, style: .continuous))
-        .accessibilityElement(children: .combine)
-        .frame(maxWidth: .infinity, alignment: role.alignment)
+        image
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: Self.maxSize.width, maxHeight: Self.maxSize.height)
+            .clipShape(RoundedRectangle(cornerRadius: DSRadius.radiusBubble, style: .continuous))
+            .accessibilityLabel(text)
+            .frame(maxWidth: .infinity, alignment: role.alignment)
     }
 }
 
 private extension DSChatAttachment {
-    static let size = CGSize(width: 210, height: 140)
-    static let iconSize: CGFloat = 30
+    static let maxSize = CGSize(width: 210, height: 280)
 }
 
 #Preview {
-    DSChatAttachment("foto_planta.jpg")
+    DSChatAttachment(image: Image(systemName: "photo"), label: "Imagen adjunta")
         .padding()
         .background(DSColor.background)
 }

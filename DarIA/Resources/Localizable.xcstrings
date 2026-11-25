@@ -1,6 +1,23 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "chat.attachment.image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attached image"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen adjunta"
+          }
+        }
+      }
+    },
     "chat.composer.attach" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31,6 +48,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mensaje"
+          }
+        }
+      }
+    },
+    "chat.composer.removeImage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove image"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar imagen"
           }
         }
       }
@@ -167,6 +201,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Este dispositivo no puede usar este modelo. Elige otro."
+          }
+        }
+      }
+    },
+    "chat.error.imageUnreadable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That image couldn't be opened. Try another one."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido abrir esa imagen. Prueba con otra."
+          }
+        }
+      }
+    },
+    "chat.error.imagesNotSupported" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This model can't look at images. Pick another one, or ask in words."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este modelo no puede ver imágenes. Elige otro o pregúntalo con palabras."
           }
         }
       }

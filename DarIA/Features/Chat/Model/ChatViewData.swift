@@ -24,6 +24,8 @@ struct ChatViewData: Equatable, Sendable {
         case contentRejected
         case conversationTooLong
         case unsupportedLanguage
+        case imagesNotSupported
+        case imageUnreadable
         case unknown
     }
 
@@ -40,8 +42,8 @@ struct ChatViewData: Equatable, Sendable {
         let id: UUID
         var sender: Sender
         var text: String
-        /// File name of an attached image or file, if any.
-        var attachmentName: String?
+        /// Attached image (JPEG, already scaled down), if any.
+        var imageData: Data?
         var isDelivered: Bool
         /// Set when the assistant could not answer: the message shows the failure instead of `text`.
         var failure: ReplyFailure?

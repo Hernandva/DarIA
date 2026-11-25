@@ -1,5 +1,7 @@
 import DarIAData
 import Foundation
+import ImageIO
+import UniformTypeIdentifiers
 
 protocol ChatUseCaseProtocol: Sendable {
     /// Returns a new, empty conversation with the default provider.
@@ -10,6 +12,9 @@ protocol ChatUseCaseProtocol: Sendable {
         to messages: [ChatViewData.Message],
         connection: ChatViewData.Connection
     ) async throws -> ChatViewData.Message
+    /// Turns a picked image into the scaled-down JPEG the chat shows and sends.
+    /// Throws `ChatViewData.ReplyFailure.imageUnreadable` when the data is not an image.
+    func prepareImage(_ data: Data) async throws -> Data
 }
 
 /// Request sent to the Chat repository.
@@ -22,6 +27,7 @@ struct ChatRequest: ChatRequestProtocol {
 struct ChatRequestMessage: ChatMessageProtocol {
     let role: ChatRole
     let text: String
+    let imageData: Data?
 }
 
 /// Business logic of Chat: talks to the Chat repository through its public API. The screen never knows which
@@ -63,11 +69,40 @@ struct ChatUseCase: ChatUseCaseProtocol {
             throw ChatViewData.ReplyFailure.unknown
         }
     }
+
+    func prepareImage(_ data: Data) async throws -> Data {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let image = CGImageSourceCreateThumbnailAtIndex(source, 0, Self.thumbnailOptions as CFDictionary),
+              let jpeg = Self.jpegData(from: image) else {
+            throw ChatViewData.ReplyFailure.imageUnreadable
+        }
+        return jpeg
+    }
 }
 
 private extension ChatUseCase {
     /// Provider used when the app opens, until the providers screen lets the user choose another one.
     static let defaultProvider = ChatProvider.appleIntelligence
+    /// Longest side of the images kept in the conversation, in pixels.
+    static let maxImageSide = 1024
+    static let jpegQuality = 0.8
+
+    static var thumbnailOptions: [CFString: Any] {
+        [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxImageSide
+        ]
+    }
+
+    static func jpegData(from image: CGImage) -> Data? {
+        let data = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil)
+        else { return nil }
+        let options = [kCGImageDestinationLossyCompressionQuality: jpegQuality] as CFDictionary
+        CGImageDestinationAddImage(destination, image, options)
+        return CGImageDestinationFinalize(destination) ? data as Data : nil
+    }
 
     static func connection(for provider: ChatProvider) -> ChatViewData.Connection {
         switch provider.kind {
@@ -76,11 +111,17 @@ private extension ChatUseCase {
         }
     }
 
-    /// Text messages of the conversation, without failures or attachments without text.
+    /// Messages of the conversation with text or an image, without failures.
     static func requestMessages(from messages: [ChatViewData.Message]) -> [any ChatMessageProtocol] {
         messages
-            .filter { $0.failure == nil && !$0.text.isEmpty }
-            .map { ChatRequestMessage(role: $0.sender == .user ? .user : .assistant, text: $0.text) }
+            .filter { $0.failure == nil && (!$0.text.isEmpty || $0.imageData != nil) }
+            .map {
+                ChatRequestMessage(
+                    role: $0.sender == .user ? .user : .assistant,
+                    text: $0.text,
+                    imageData: $0.imageData
+                )
+            }
     }
 
     static func failure(from error: ChatRepositoryError) -> ChatViewData.ReplyFailure {
@@ -91,6 +132,7 @@ private extension ChatUseCase {
         case .contentRejected: .contentRejected
         case .conversationTooLong: .conversationTooLong
         case .unsupportedLanguage: .unsupportedLanguage
+        case .imagesNotSupported: .imagesNotSupported
         case .unsupportedProvider, .missingQuestion: .unknown
         }
     }

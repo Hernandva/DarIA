@@ -15,8 +15,10 @@ public enum ChatRepositoryError: Error, Equatable, Sendable {
     case unsupportedProvider(ChatProvider)
     /// The provider exists but cannot answer on this device right now.
     case providerUnavailable(ChatUnavailableReason)
-    /// The request has no question: its last message is not a non-empty message of the user.
+    /// The request has no question: its last message is not a message of the user with text or an image.
     case missingQuestion
+    /// The conversation has an image, but the model of the provider cannot read images.
+    case imagesNotSupported
     /// The model refused the question or its answer, for safety reasons.
     case contentRejected
     /// The conversation no longer fits in the context of the model.

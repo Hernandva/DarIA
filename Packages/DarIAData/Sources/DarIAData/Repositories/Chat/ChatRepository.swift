@@ -35,12 +35,6 @@ public final class ChatRepository: ChatRepositoryProtocol {
 private extension ChatRepository {
     /// Add here the service of each new provider.
     static var defaultServices: [ChatProvider.Kind: any ChatProviderService] {
-        var services: [ChatProvider.Kind: any ChatProviderService] = [:]
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, macOS 26.0, *) {
-            services[.appleIntelligence] = AppleIntelligenceChatService()
-        }
-        #endif
-        return services
+        [.appleIntelligence: AppleIntelligenceChatService()]
     }
 }

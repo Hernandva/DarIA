@@ -16,6 +16,10 @@ final class ChatViewModel {
     private(set) var viewData = ChatViewData()
     /// Text being written in the composer.
     var draft = ""
+    /// Image waiting to be sent with the next message.
+    private(set) var draftImage: Data?
+    /// Problem with the image the user tried to attach, shown in the conversation until the next message.
+    private(set) var attachmentFailure: ChatViewData.ReplyFailure?
     /// True while the assistant is answering the last message.
     private(set) var isReplying = false
     /// Request of the reply in progress. Starting a new chat cancels it.
@@ -59,13 +63,40 @@ final class ChatViewModel {
         }
     }
 
-    /// Adds the draft to the conversation and asks the model for a reply.
+    /// Scales the picked image down and keeps it for the next message.
+    func attachImage(_ data: Data) async {
+        do {
+            draftImage = try await useCase.prepareImage(data)
+            attachmentFailure = nil
+        } catch {
+            attachmentFailure = error as? ChatViewData.ReplyFailure ?? .imageUnreadable
+        }
+    }
+
+    /// The picked photo could not be loaded (e.g. it is still downloading from iCloud and failed).
+    func reportUnreadableImage() {
+        attachmentFailure = .imageUnreadable
+    }
+
+    func removeDraftImage() {
+        draftImage = nil
+    }
+
+    /// Adds the draft (text, image or both) to the conversation and asks the model for a reply.
     func send() {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard canSend, !text.isEmpty, let connection else { return }
-        let message = ChatViewData.Message(id: UUID(), sender: .user, text: text, isDelivered: false)
+        guard canSend, !text.isEmpty || draftImage != nil, let connection else { return }
+        let message = ChatViewData.Message(
+            id: UUID(),
+            sender: .user,
+            text: text,
+            imageData: draftImage,
+            isDelivered: false
+        )
         viewData.conversation?.messages.append(message)
         draft = ""
+        draftImage = nil
+        attachmentFailure = nil
         isReplying = true
         let conversation = messages
         replyTask = Task { await self.requestReply(to: conversation, messageID: message.id, connection: connection) }
@@ -78,6 +109,8 @@ final class ChatViewModel {
         viewData.conversation?.messages.removeAll()
         viewData.conversation?.startedAt = Date()
         draft = ""
+        draftImage = nil
+        attachmentFailure = nil
     }
 
     /// Whether the message starts a new group of the same sender, which is separated from the one before.

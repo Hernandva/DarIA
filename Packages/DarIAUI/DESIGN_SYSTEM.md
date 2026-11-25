@@ -40,12 +40,12 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSIconButton(systemImage:label:action:)` | Icon-only 44 pt button tinted with `accent`; `label` is its accessibility label. |
 | `DSNavigationTitle(_:subtitle:accessibilityLabel:action:)` | Tappable navigation-bar title with a subtitle and an up-down chevron (opens a picker). |
 | `DSChatBubble(_:role:)` | Chat message. `role`: `.incoming` (assistant, `surface`) or `.outgoing` (user, `accent`). |
-| `DSChatAttachment(_:role:)` | Image or file attached to a message, with its file name. |
+| `DSChatAttachment(image:label:role:)` | Image attached to a message, in its aspect ratio; `label` is its accessibility label. |
 | `DSChatTimestamp(day:time:)` | Centered date stamp above a group of messages. |
 | `DSChatStatus(_:)` | Status under the user's last message («Delivered»). |
 | `DSChatTypingIndicator(_:)` | Incoming bubble with pulsing dots while the assistant writes; the text is its accessibility label. |
 | `DSChatNotice(_:)` | Centered notice in a conversation, such as an error of the model. |
-| `DSChatComposer(message:texts:isSendEnabled:onAttach:onSend:)` | Chat bottom bar: attach button and growing message field with send. |
+| `DSChatComposer(message:texts:isSendEnabled:onAttach:onSend:)` | Chat bottom bar: attach button and growing message field with send. `.attachment(_:)` shows an image waiting to be sent, with a button to remove it. |
 
 New components go in `Sources/DarIAUI/Components/`, use only tokens, are `public` and include a `#Preview`. A component that shows a single text conforms to `DSLocalizableText`; components with several texts take them already localised.
 

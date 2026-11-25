@@ -13,14 +13,30 @@ public struct DSChatComposerTexts: Sendable {
     }
 }
 
+/// Image waiting to be sent, shown as a thumbnail inside the message field.
+public struct DSChatComposerAttachment {
+    public let image: Image
+    /// Accessibility label of the button that removes the image, already localised.
+    public let removeLabel: String
+    public let onRemove: @MainActor () -> Void
+
+    public init(image: Image, removeLabel: String, onRemove: @escaping @MainActor () -> Void) {
+        self.image = image
+        self.removeLabel = removeLabel
+        self.onRemove = onRemove
+    }
+}
+
 /// Bottom bar of a chat: an attach button and a growing message field with the send button inside.
-/// Send is disabled while the field is empty or `isSendEnabled` is false (e.g. while the assistant answers).
+/// An image waiting to be sent is set with `.attachment(_:)`. Send is disabled while there is neither text nor
+/// an image, or while `isSendEnabled` is false (e.g. while the assistant answers).
 public struct DSChatComposer: View {
     @Binding private var message: String
     private let texts: DSChatComposerTexts
     private let isSendEnabled: Bool
     private let onAttach: @MainActor () -> Void
     private let onSend: @MainActor () -> Void
+    private var attachment: DSChatComposerAttachment?
     /// Changes after each send to rebuild the text field (see `send()`).
     @State private var fieldGeneration = 0
     @FocusState private var isFieldFocused: Bool
@@ -53,6 +69,13 @@ public struct DSChatComposer: View {
                 .frame(height: Self.hairline)
         }
     }
+
+    /// Returns a copy that shows `attachment` inside the field, or no image when it is `nil`.
+    public func attachment(_ attachment: DSChatComposerAttachment?) -> Self {
+        var copy = self
+        copy.attachment = attachment
+        return copy
+    }
 }
 
 private extension DSChatComposer {
@@ -61,21 +84,25 @@ private extension DSChatComposer {
     static let attachSize: CGFloat = 36
     static let sendSize: CGFloat = 32
     static let maxLines = 5
+    static let thumbnailSize: CGFloat = 64
+    static let removeIconSize: CGFloat = 20
 
     /// The keyboard can commit a pending autocorrection right after the owner clears the message, which leaves
     /// the sent text on screen while the binding is empty. Rebuilding the field once the message is cleared keeps
-    /// both in sync, and the focus is given back so the keyboard stays up.
+    /// both in sync. If the field had the focus, it gets it back so the keyboard stays up.
     func send() {
+        let wasFocused = isFieldFocused
         onSend()
         guard message.isEmpty else { return }
         fieldGeneration += 1
+        guard wasFocused else { return }
         Task { @MainActor in
             isFieldFocused = true
         }
     }
 
     var canSend: Bool {
-        isSendEnabled && !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        isSendEnabled && (attachment != nil || !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
 
     var attachButton: some View {
@@ -93,6 +120,45 @@ private extension DSChatComposer {
     }
 
     var field: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let attachment {
+                thumbnail(for: attachment)
+                    .padding(.top, DSSpacing.small)
+            }
+            textRow
+        }
+        .padding(.leading, DSSpacing.space3)
+        .padding(.trailing, DSSpacing.xSmall)
+        .frame(minHeight: Self.fieldHeight)
+        .background(DSColor.surface, in: RoundedRectangle(cornerRadius: DSRadius.radiusCapsule, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: DSRadius.radiusCapsule, style: .continuous)
+                .strokeBorder(DSColor.separator, lineWidth: Self.hairline)
+        }
+    }
+
+    func thumbnail(for attachment: DSChatComposerAttachment) -> some View {
+        attachment.image
+            .resizable()
+            .scaledToFill()
+            .frame(width: Self.thumbnailSize, height: Self.thumbnailSize)
+            .clipShape(RoundedRectangle(cornerRadius: DSRadius.radiusControl, style: .continuous))
+            .overlay(alignment: .topTrailing) {
+                Button(action: attachment.onRemove) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: Self.removeIconSize))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(DSColor.onAccent, DSColor.textPrimary)
+                        .frame(width: DSSpacing.tapMin, height: DSSpacing.tapMin, alignment: .topTrailing)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: DSSpacing.small, y: -DSSpacing.small)
+                .accessibilityLabel(attachment.removeLabel)
+            }
+    }
+
+    var textRow: some View {
         HStack(alignment: .bottom, spacing: DSSpacing.small) {
             TextField(
                 text: $message,
@@ -108,14 +174,6 @@ private extension DSChatComposer {
             .id(fieldGeneration)
             .padding(.vertical, DSSpacing.small)
             sendButton
-        }
-        .padding(.leading, DSSpacing.space3)
-        .padding(.trailing, DSSpacing.xSmall)
-        .frame(minHeight: Self.fieldHeight)
-        .background(DSColor.surface, in: RoundedRectangle(cornerRadius: DSRadius.radiusCapsule, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: DSRadius.radiusCapsule, style: .continuous)
-                .strokeBorder(DSColor.separator, lineWidth: Self.hairline)
         }
     }
 
@@ -146,6 +204,7 @@ private extension DSChatComposer {
             onAttach: {},
             onSend: {}
         )
+        .attachment(DSChatComposerAttachment(image: Image(systemName: "photo"), removeLabel: "Quitar") {})
     }
     .background(DSColor.background)
 }

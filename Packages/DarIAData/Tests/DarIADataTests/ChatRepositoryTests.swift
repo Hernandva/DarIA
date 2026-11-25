@@ -16,8 +16,23 @@ struct ChatRepositoryTests {
 
         #expect(response.text == "Fascinating.")
         let received = try #require(await service.received)
-        #expect(received.question == "How are you?")
+        #expect(received.question.text == "How are you?")
+        #expect(!received.hasImages)
         #expect(received.history.map(\.text) == ["Hi", "Hello."])
+    }
+
+    @Test func acceptsAQuestionWithOnlyAnImage() async throws {
+        let service = ChatServiceSpy(reply: "A plant.")
+        let repository = ChatRepository(services: [.appleIntelligence: service])
+        let image = Data([0xFF, 0xD8])
+        let request = ChatRequestStub(messages: [ChatMessageStub(role: .user, text: " ", imageData: image)])
+
+        _ = try await repository.send(request)
+
+        let received = try #require(await service.received)
+        #expect(received.question.imageData == image)
+        #expect(received.question.text.isEmpty)
+        #expect(received.hasImages)
     }
 
     @Test func throwsWhenTheProviderHasNoService() async {
@@ -45,6 +60,7 @@ struct ChatRepositoryTests {
 private struct ChatMessageStub: ChatMessageProtocol {
     let role: ChatRole
     let text: String
+    var imageData: Data?
 }
 
 private struct ChatRequestStub: ChatRequestProtocol {
@@ -72,6 +88,10 @@ struct ChatPersonaTests {
 
         #expect(instructions.hasPrefix("You are DarIA"))
         #expect(instructions.hasSuffix("answer in Spanish."))
+    }
+
+    @Test func asksForTheLanguageWhenAnImageComesWithoutText() {
+        #expect(ChatPersona.imageOnlyPrompt(language: "Spanish").hasSuffix("in Spanish."))
     }
 }
 

@@ -1,8 +1,11 @@
 import DarIAUI
+import PhotosUI
 import SwiftUI
 
 struct ChatView: View {
     @State private var viewModel: ChatViewModel
+    @State private var isPickingPhoto = false
+    @State private var pickedPhoto: PhotosPickerItem?
 
     /// Receives only the container and resolves the view model from it.
     init(dependencies: ChatDependencies) {
@@ -18,10 +21,13 @@ struct ChatView: View {
                     message: $viewModel.draft,
                     texts: composerTexts,
                     isSendEnabled: viewModel.canSend,
-                    onAttach: {},
+                    onAttach: { isPickingPhoto = true },
                     onSend: { viewModel.send() }
                 )
+                .attachment(draftAttachment)
             }
+            .photosPicker(isPresented: $isPickingPhoto, selection: $pickedPhoto, matching: .images)
+            .task(id: pickedPhoto) { await loadPickedPhoto() }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .task { await viewModel.load() }
@@ -51,6 +57,10 @@ private extension ChatView {
                     row(for: message)
                         .padding(.top, viewModel.startsGroup(message) ? DSSpacing.small : 0)
                 }
+                if let failure = viewModel.attachmentFailure {
+                    DSChatNotice().localized(Self.key(for: failure))
+                        .padding(.top, DSSpacing.small)
+                }
                 if viewModel.isReplying {
                     DSChatTypingIndicator().localized("chat.typing")
                         .padding(.top, DSSpacing.small)
@@ -68,8 +78,9 @@ private extension ChatView {
     func row(for message: ChatViewData.Message) -> some View {
         let role: DSChatRole = message.sender == .user ? .outgoing : .incoming
         VStack(spacing: DSSpacing.xSmall) {
-            if let attachmentName = message.attachmentName {
-                DSChatAttachment(attachmentName, role: role)
+            if let image = message.imageData.flatMap(Self.image(from:)) {
+                DSChatAttachment(image: image, role: role)
+                    .localized("chat.attachment.image")
             }
             if let failure = message.failure {
                 DSChatNotice().localized(Self.key(for: failure))
@@ -101,6 +112,30 @@ private extension ChatView {
                 .localized("chat.newChat")
         }
         .sharedBackgroundVisibility(.hidden)
+    }
+
+    var draftAttachment: DSChatComposerAttachment? {
+        guard let image = viewModel.draftImage.flatMap(Self.image(from:)) else { return nil }
+        return DSChatComposerAttachment(
+            image: image,
+            removeLabel: String(localized: "chat.composer.removeImage"),
+            onRemove: { viewModel.removeDraftImage() }
+        )
+    }
+
+    /// Loads the photo picked in the photo picker and hands it to the view model.
+    func loadPickedPhoto() async {
+        guard let pickedPhoto else { return }
+        if let data = try? await pickedPhoto.loadTransferable(type: Data.self) {
+            await viewModel.attachImage(data)
+        } else {
+            viewModel.reportUnreadableImage()
+        }
+        self.pickedPhoto = nil
+    }
+
+    static func image(from data: Data) -> Image? {
+        UIImage(data: data).map(Image.init(uiImage:))
     }
 
     var composerTexts: DSChatComposerTexts {
@@ -140,6 +175,8 @@ private extension ChatView {
         case .contentRejected: "chat.error.contentRejected"
         case .conversationTooLong: "chat.error.conversationTooLong"
         case .unsupportedLanguage: "chat.error.unsupportedLanguage"
+        case .imagesNotSupported: "chat.error.imagesNotSupported"
+        case .imageUnreadable: "chat.error.imageUnreadable"
         case .unknown: "chat.error.unknown"
         }
     }
