@@ -7,6 +7,7 @@ struct ChatViewData: Equatable, Sendable {
     enum ConnectionKind: Equatable, Sendable {
         case cloud
         case local
+        case device
     }
 
     /// Who wrote a message.
@@ -15,8 +16,21 @@ struct ChatViewData: Equatable, Sendable {
         case user
     }
 
-    /// Model the conversation is held with.
+    /// Why the assistant could not answer. Shown in the conversation instead of a reply.
+    enum ReplyFailure: Error, Equatable, Sendable {
+        case deviceNotEligible
+        case modelDisabled
+        case modelNotReady
+        case contentRejected
+        case conversationTooLong
+        case unsupportedLanguage
+        case unknown
+    }
+
+    /// Model the conversation is held with. The view only shows its name and kind.
     struct Connection: Equatable, Sendable {
+        /// Identifier of the provider, which the use case passes back to the repository.
+        var providerID: String
         var name: String
         var kind: ConnectionKind
     }
@@ -29,6 +43,8 @@ struct ChatViewData: Equatable, Sendable {
         /// File name of an attached image or file, if any.
         var attachmentName: String?
         var isDelivered: Bool
+        /// Set when the assistant could not answer: the message shows the failure instead of `text`.
+        var failure: ReplyFailure?
     }
 
     /// Conversation returned by `ChatUseCase`.
@@ -38,6 +54,6 @@ struct ChatViewData: Equatable, Sendable {
         var messages: [Message]
     }
 
-    /// Result of `ChatUseCase`, or `nil` until it loads.
+    /// Result of `ChatUseCase.execute()`, or `nil` until it loads. Replies are added to its messages.
     var conversation: Conversation?
 }

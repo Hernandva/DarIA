@@ -43,7 +43,9 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSChatAttachment(_:role:)` | Image or file attached to a message, with its file name. |
 | `DSChatTimestamp(day:time:)` | Centered date stamp above a group of messages. |
 | `DSChatStatus(_:)` | Status under the user's last message («Delivered»). |
-| `DSChatComposer(message:texts:onAttach:onSend:)` | Chat bottom bar: attach button and growing message field with send. |
+| `DSChatTypingIndicator(_:)` | Incoming bubble with pulsing dots while the assistant writes; the text is its accessibility label. |
+| `DSChatNotice(_:)` | Centered notice in a conversation, such as an error of the model. |
+| `DSChatComposer(message:texts:isSendEnabled:onAttach:onSend:)` | Chat bottom bar: attach button and growing message field with send. |
 
 New components go in `Sources/DarIAUI/Components/`, use only tokens, are `public` and include a `#Preview`. A component that shows a single text conforms to `DSLocalizableText`; components with several texts take them already localised.
 

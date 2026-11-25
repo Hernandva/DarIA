@@ -42,10 +42,29 @@ public struct DSChatStatus: View, DSLocalizableText {
     }
 }
 
+/// Centered notice inside a conversation, such as an error of the model.
+public struct DSChatNotice: View, DSLocalizableText {
+    public var text: String
+
+    public init(_ text: String = "") {
+        self.text = text
+    }
+
+    public var body: some View {
+        Text(text)
+            .font(DSFont.footnote)
+            .foregroundStyle(DSColor.destructive)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, DSSpacing.medium)
+            .frame(maxWidth: .infinity)
+    }
+}
+
 #Preview {
     VStack {
         DSChatTimestamp(day: "Hoy", time: "12:52")
         DSChatStatus("Entregado")
+        DSChatNotice("El modelo no está disponible.")
     }
     .padding()
     .background(DSColor.background)

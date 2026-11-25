@@ -123,4 +123,5 @@ python3 scripts/codegen/new_repo.py --name <RepositoryName> --type local --stora
 <!-- codegen:repository-registry:start -->
 | Repository | Type | Storage | Public API | Folder |
 |---|---|---|---|---|
+| `Chat` | Remote | — | `ChatRepositoryProtocol` | `Sources/DarIAData/Repositories/Chat` |
 <!-- codegen:repository-registry:end -->

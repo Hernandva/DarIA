@@ -14,21 +14,27 @@ public struct DSChatComposerTexts: Sendable {
 }
 
 /// Bottom bar of a chat: an attach button and a growing message field with the send button inside.
-/// Send is disabled while the field is empty.
+/// Send is disabled while the field is empty or `isSendEnabled` is false (e.g. while the assistant answers).
 public struct DSChatComposer: View {
     @Binding private var message: String
     private let texts: DSChatComposerTexts
+    private let isSendEnabled: Bool
     private let onAttach: @MainActor () -> Void
     private let onSend: @MainActor () -> Void
+    /// Changes after each send to rebuild the text field (see `send()`).
+    @State private var fieldGeneration = 0
+    @FocusState private var isFieldFocused: Bool
 
     public init(
         message: Binding<String>,
         texts: DSChatComposerTexts,
+        isSendEnabled: Bool = true,
         onAttach: @escaping @MainActor () -> Void,
         onSend: @escaping @MainActor () -> Void
     ) {
         self._message = message
         self.texts = texts
+        self.isSendEnabled = isSendEnabled
         self.onAttach = onAttach
         self.onSend = onSend
     }
@@ -56,8 +62,20 @@ private extension DSChatComposer {
     static let sendSize: CGFloat = 32
     static let maxLines = 5
 
+    /// The keyboard can commit a pending autocorrection right after the owner clears the message, which leaves
+    /// the sent text on screen while the binding is empty. Rebuilding the field once the message is cleared keeps
+    /// both in sync, and the focus is given back so the keyboard stays up.
+    func send() {
+        onSend()
+        guard message.isEmpty else { return }
+        fieldGeneration += 1
+        Task { @MainActor in
+            isFieldFocused = true
+        }
+    }
+
     var canSend: Bool {
-        !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        isSendEnabled && !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var attachButton: some View {
@@ -86,6 +104,8 @@ private extension DSChatComposer {
             .font(DSFont.body)
             .foregroundStyle(DSColor.textPrimary)
             .lineLimit(1...Self.maxLines)
+            .focused($isFieldFocused)
+            .id(fieldGeneration)
             .padding(.vertical, DSSpacing.small)
             sendButton
         }
@@ -100,7 +120,7 @@ private extension DSChatComposer {
     }
 
     var sendButton: some View {
-        Button(action: onSend) {
+        Button(action: send) {
             Image(systemName: "arrow.up")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(DSColor.onAccent)

@@ -17,6 +17,7 @@ struct ChatView: View {
                 DSChatComposer(
                     message: $viewModel.draft,
                     texts: composerTexts,
+                    isSendEnabled: viewModel.canSend,
                     onAttach: {},
                     onSend: { viewModel.send() }
                 )
@@ -50,6 +51,10 @@ private extension ChatView {
                     row(for: message)
                         .padding(.top, viewModel.startsGroup(message) ? DSSpacing.small : 0)
                 }
+                if viewModel.isReplying {
+                    DSChatTypingIndicator().localized("chat.typing")
+                        .padding(.top, DSSpacing.small)
+                }
             }
             .padding(.horizontal, DSSpacing.space3)
             .padding(.vertical, DSSpacing.medium)
@@ -66,7 +71,9 @@ private extension ChatView {
             if let attachmentName = message.attachmentName {
                 DSChatAttachment(attachmentName, role: role)
             }
-            if !message.text.isEmpty {
+            if let failure = message.failure {
+                DSChatNotice().localized(Self.key(for: failure))
+            } else if !message.text.isEmpty {
                 DSChatBubble(message.text, role: role)
             }
             if message.id == viewModel.lastUserMessageID, message.isDelivered {
@@ -115,6 +122,7 @@ private extension ChatView {
         let kind = switch connection.kind {
         case .cloud: String(localized: "chat.connection.cloud")
         case .local: String(localized: "chat.connection.local")
+        case .device: String(localized: "chat.connection.device")
         }
         return "\(connection.name) · \(kind)"
     }
@@ -122,6 +130,18 @@ private extension ChatView {
     var connectionAccessibilityText: String {
         let format = String(localized: "chat.connection.accessibility")
         return String(format: format, viewModel.connection?.name ?? "")
+    }
+
+    static func key(for failure: ChatViewData.ReplyFailure) -> String {
+        switch failure {
+        case .deviceNotEligible: "chat.error.deviceNotEligible"
+        case .modelDisabled: "chat.error.modelDisabled"
+        case .modelNotReady: "chat.error.modelNotReady"
+        case .contentRejected: "chat.error.contentRejected"
+        case .conversationTooLong: "chat.error.conversationTooLong"
+        case .unsupportedLanguage: "chat.error.unsupportedLanguage"
+        case .unknown: "chat.error.unknown"
+        }
     }
 }
 

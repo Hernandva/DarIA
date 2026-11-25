@@ -29,6 +29,8 @@ public struct DSNavigationTitle: View {
                 HStack(spacing: DSSpacing.xSmall) {
                     Text(subtitle)
                         .font(DSTypeScale.sectionHeader)
+                        .lineLimit(1)
+                        .minimumScaleFactor(Self.minimumScale)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: Self.chevronSize, weight: .bold))
                 }
@@ -47,6 +49,8 @@ public struct DSNavigationTitle: View {
 
 private extension DSNavigationTitle {
     static let chevronSize: CGFloat = 9
+    /// Long connection names shrink a little before they are truncated.
+    static let minimumScale: CGFloat = 0.75
 }
 
 #Preview {

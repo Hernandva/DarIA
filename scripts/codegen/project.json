@@ -9,5 +9,10 @@
     "iphone",
     "ipad"
   ],
-  "repositories": {}
+  "repositories": {
+    "Chat": {
+      "type": "remote",
+      "storage": null
+    }
+  }
 }

@@ -86,6 +86,23 @@
         }
       }
     },
+    "chat.connection.device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "on device"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dispositivo"
+          }
+        }
+      }
+    },
     "chat.connection.local" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -99,6 +116,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "local"
+          }
+        }
+      }
+    },
+    "chat.error.contentRejected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model won't answer that one."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El modelo no va a responder a eso."
+          }
+        }
+      }
+    },
+    "chat.error.conversationTooLong" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This conversation is too long for the model. Start a new chat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta conversación es demasiado larga para el modelo. Empieza un chat nuevo."
+          }
+        }
+      }
+    },
+    "chat.error.deviceNotEligible" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device can't run this model. Pick another one."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo no puede usar este modelo. Elige otro."
+          }
+        }
+      }
+    },
+    "chat.error.modelDisabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This model is turned off. Turn on Apple Intelligence in Settings, or pick another model."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este modelo está desactivado. Activa Apple Intelligence en Ajustes o elige otro modelo."
+          }
+        }
+      }
+    },
+    "chat.error.modelNotReady" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model is still getting ready. Try again in a few minutes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El modelo todavía se está preparando. Inténtalo de nuevo en unos minutos."
+          }
+        }
+      }
+    },
+    "chat.error.unknown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong. Try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo ha fallado. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "chat.error.unsupportedLanguage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model doesn't speak this language."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El modelo no habla este idioma."
           }
         }
       }
@@ -201,6 +337,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoy"
+          }
+        }
+      }
+    },
+    "chat.typing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DarIA is typing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DarIA está escribiendo"
           }
         }
       }
