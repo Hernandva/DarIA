@@ -1,0 +1,9 @@
+import Foundation
+
+/// Stored format of the {{Repo}} data, written by the repository. Internal to DarIAData.
+/// Keep its coding keys equal to {{Repo}}ResponseDAO's, so what is saved can be read back.
+struct {{Repo}}RequestDAO: Encodable, Sendable {
+    init(_ request: some {{Repo}}RequestProtocol) {
+        // Copy the fields of the request protocol into encodable properties.
+    }
+}

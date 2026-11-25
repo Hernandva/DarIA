@@ -1,0 +1,37 @@
+import Foundation
+
+/// On-device storage of {{Repo}}: one value in {{StorageName}} under `{{Repo}}Storage.key`.
+protocol {{Repo}}StorageProtocol: Sendable {
+    /// The stored value, or `nil` when nothing has been saved yet.
+    func load() async throws -> {{Repo}}ResponseDAO?
+    /// Saves the value, replacing the previous one.
+    func save(_ value: {{Repo}}RequestDAO) async throws
+    /// Removes the stored value.
+    func remove() async throws
+}
+
+/// Writes the DAOs as JSON through a `LocalStore`. `{{Repo}}RequestDAO` and `{{Repo}}ResponseDAO` must use the same
+/// coding keys, so what is saved can be read back.
+struct {{Repo}}Storage: {{Repo}}StorageProtocol {
+    /// Do not change it once the app ships: the data saved under the old key would be lost.
+    static let key = "{{key}}"
+
+    private let store: any LocalStore
+
+    init(store: any LocalStore = {{StoreInit}}) {
+        self.store = store
+    }
+
+    func load() async throws -> {{Repo}}ResponseDAO? {
+        guard let data = try await store.read(key: Self.key) else { return nil }
+        return try JSONDecoder().decode({{Repo}}ResponseDAO.self, from: data)
+    }
+
+    func save(_ value: {{Repo}}RequestDAO) async throws {
+        try await store.write(JSONEncoder().encode(value), key: Self.key)
+    }
+
+    func remove() async throws {
+        try await store.remove(key: Self.key)
+    }
+}

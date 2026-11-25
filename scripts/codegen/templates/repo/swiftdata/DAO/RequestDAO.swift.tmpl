@@ -1,0 +1,9 @@
+import Foundation
+
+/// Sendable copy of the data to store, built from {{Repo}}RequestProtocol. Internal to DarIAData.
+/// It carries the data into {{Repo}}Store, which turns it into a {{Repo}}Entity.
+struct {{Repo}}RequestDAO: Sendable {
+    init(_ request: some {{Repo}}RequestProtocol) {
+        // Copy the fields of the request protocol.
+    }
+}

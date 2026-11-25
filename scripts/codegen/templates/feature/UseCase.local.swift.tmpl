@@ -1,0 +1,33 @@
+import Foundation
+import DarIAData
+
+protocol {{Feature}}UseCaseProtocol: Sendable {
+    /// Returns only the data of the response. The view model adds it to its `{{Feature}}ViewData`.
+    func execute() async throws -> {{Feature}}ViewData.Content
+}
+
+/// Business logic of {{Feature}}: reads the {{Repo}} repository, stored on the device, and returns only the data of
+/// its response, mapped out of the DarIAData types. If the screen also writes data, add a use case that calls
+/// `repository.save(_:)` with a type that conforms to {{Repo}}RequestProtocol.
+struct {{Feature}}UseCase: {{Feature}}UseCaseProtocol {
+    private let repository: any {{Repo}}RepositoryProtocol
+
+    /// Receives only the container and resolves what it needs from it.
+    /// `{{Feature}}Dependencies` lives on the main actor, so this init does too.
+    @MainActor
+    init(dependencies: {{Feature}}Dependencies) {
+        self.repository = dependencies.resolveRepository()
+    }
+
+    func execute() async throws -> {{Feature}}ViewData.Content {
+        let response = try await repository.{{FetchCall}}
+        return Self.content(from: response)
+    }
+}
+
+private extension {{Feature}}UseCase {
+    /// Maps the fields of the {{Repo}} response into the data the view model adds to its ViewData.
+    static func content(from response: {{ResponseType}}) -> {{Feature}}ViewData.Content {
+        {{Feature}}ViewData.Content()
+    }
+}

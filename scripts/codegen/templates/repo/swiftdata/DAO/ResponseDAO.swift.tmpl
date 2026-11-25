@@ -1,0 +1,9 @@
+import Foundation
+
+/// Sendable copy of a stored record, built from {{Repo}}Entity. Internal to DarIAData:
+/// the app only sees {{Repo}}ResponseProtocol.
+struct {{Repo}}ResponseDAO: Sendable, {{Repo}}ResponseProtocol {
+    init(_ entity: {{Repo}}Entity) {
+        // Copy the fields of the entity.
+    }
+}

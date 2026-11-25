@@ -1,0 +1,13 @@
+import Foundation
+import SwiftData
+
+/// SwiftData model of a stored {{Repo}} record. Internal to DarIAData: it never leaves {{Repo}}Store.
+@Model
+final class {{Repo}}Entity {
+    var createdAt: Date
+
+    init(_ request: {{Repo}}RequestDAO) {
+        createdAt = .now
+        // Copy the fields of the request DAO into stored properties.
+    }
+}

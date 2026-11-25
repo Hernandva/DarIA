@@ -1,0 +1,5 @@
+import Foundation
+
+/// Stored format of the {{Repo}} data, read by the repository. Internal to DarIAData:
+/// the app only sees {{Repo}}ResponseProtocol. Keep its coding keys equal to {{Repo}}RequestDAO's.
+struct {{Repo}}ResponseDAO: Decodable, Sendable, {{Repo}}ResponseProtocol {}

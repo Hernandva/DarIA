@@ -1,0 +1,13 @@
+{
+  "name": "DarIA",
+  "slug": "daria",
+  "appDirectory": "DarIA",
+  "rootFeature": "Chat",
+  "dataSources": "Packages/DarIAData/Sources/DarIAData",
+  "designSystemPackage": "Packages/DarIAUI",
+  "platforms": [
+    "iphone",
+    "ipad"
+  ],
+  "repositories": {}
+}

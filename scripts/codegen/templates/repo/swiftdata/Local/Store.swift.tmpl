@@ -1,0 +1,21 @@
+import Foundation
+import SwiftData
+
+/// Runs the SwiftData work on its own actor. Only Sendable DAOs cross its boundary, never the @Model entities.
+@ModelActor
+actor {{Repo}}Store {
+    func fetchAll() throws -> [{{Repo}}ResponseDAO] {
+        let descriptor = FetchDescriptor<{{Repo}}Entity>(sortBy: [SortDescriptor(\.createdAt)])
+        return try modelContext.fetch(descriptor).map({{Repo}}ResponseDAO.init)
+    }
+
+    func insert(_ request: {{Repo}}RequestDAO) throws {
+        modelContext.insert({{Repo}}Entity(request))
+        try modelContext.save()
+    }
+
+    func deleteAll() throws {
+        try modelContext.delete(model: {{Repo}}Entity.self)
+        try modelContext.save()
+    }
+}

@@ -1,0 +1,50 @@
+import Foundation
+import SwiftData
+
+/// Public API of the {{Repo}} local repository. Features depend on this protocol, never on the concrete class.
+public protocol {{Repo}}RepositoryProtocol: Sendable {
+    /// Every stored {{Repo}} record, oldest first.
+    func fetchAll() async throws -> [any {{Repo}}ResponseProtocol]
+    /// Inserts a new record.
+    func save(_ request: some {{Repo}}RequestProtocol) async throws
+    /// Removes every record.
+    func deleteAll() async throws
+}
+
+/// Keeps {{Repo}} records on the device with SwiftData, through `Local/{{Repo}}Store`.
+/// Flow: {{Repo}}RequestProtocol -> {{Repo}}RequestDAO -> {{Repo}}Entity (@Model)
+///       -> {{Repo}}ResponseDAO -> {{Repo}}ResponseProtocol.
+public final class {{Repo}}Repository: {{Repo}}RepositoryProtocol {
+    private static let sharedContainer = newContainer(inMemory: false)
+
+    private let container: ModelContainer
+
+    /// - Parameter inMemory: `true` keeps the records in memory only, for previews and tests.
+    public init(inMemory: Bool = false) {
+        container = inMemory ? Self.newContainer(inMemory: true) : Self.sharedContainer
+    }
+
+    public func fetchAll() async throws -> [any {{Repo}}ResponseProtocol] {
+        try await {{Repo}}Store(modelContainer: container).fetchAll()
+    }
+
+    public func save(_ request: some {{Repo}}RequestProtocol) async throws {
+        try await {{Repo}}Store(modelContainer: container).insert({{Repo}}RequestDAO(request))
+    }
+
+    public func deleteAll() async throws {
+        try await {{Repo}}Store(modelContainer: container).deleteAll()
+    }
+}
+
+private extension {{Repo}}Repository {
+    /// Each repository has its own store file, named after it.
+    static func newContainer(inMemory: Bool) -> ModelContainer {
+        let configuration = ModelConfiguration("{{Repo}}", isStoredInMemoryOnly: inMemory)
+        do {
+            return try ModelContainer(for: {{Repo}}Entity.self, configurations: configuration)
+        } catch {
+            fatalError("Could not create the {{Repo}} SwiftData container: \(error)")
+        }
+    }
+}

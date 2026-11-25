@@ -1,0 +1,161 @@
+# DarIA — Features configuration
+
+This file is the source of truth for how scenes (features) are built in the `DarIA` app target
+and how they connect to each other. Humans and coding agents must follow it, and the
+`daria-new-feature` skill keeps the **Feature registry** and the **App map** below up to date.
+Do not remove the `codegen` markers: the generator writes between them.
+
+## Stack
+
+- UI: SwiftUI only. Views compose components from the `DarIAUI` package; they never style raw controls.
+- Language: Swift 6 language mode, strict concurrency. View models are `@MainActor @Observable`.
+- Architecture: MVVM, feature based. One folder per feature under `DarIA/Features/`.
+- Data: features never talk to Alamofire or DAOs. They reach the `DarIAData` package only through a
+  repository's public API (`<Name>RepositoryProtocol`) and its public request/response protocols.
+
+## Anatomy of a feature
+
+Every new feature gets its own folder with this exact structure (example: `Profile`):
+
+```
+Features/Profile/
+├── ProfileCoordinator.swift        # Entry point: builds the view and resolves navigation routes
+├── ProfileDependencies.swift       # Dependency injection container of the feature
+├── View/ProfileView.swift          # SwiftUI view built only with DarIAUI components
+├── ViewModel/ProfileViewModel.swift# @MainActor @Observable state holder, calls the use case
+├── Model/ProfileViewData.swift     # Display-ready data, owned by the view model as a variable
+└── UseCase/ProfileUseCase.swift    # Business logic; calls the repository public API
+```
+
+### Responsibilities
+
+| Type | Responsibility | Rules |
+|---|---|---|
+| `<Feature>Coordinator` | Initialises the view through `<Feature>Dependencies` and declares the routes (`Route` enum) to the features that can be opened from it. | Conforms to `Coordinator`. Only coordinators create other coordinators. |
+| `<Feature>Dependencies` | Builds the use case, the view model and injects the repository. | The only place where concrete types are created. Keeps each dependency as a `private let` and exposes it through a `resolve<Name>()` function (`resolveRepository()`, `resolveUseCase()`, `resolveViewModel()`). It never builds the ViewData. |
+| `<Feature>View` | Renders state. Adds DarIAUI components and localises text with `.localized("key")`. | No business logic, no networking, no hard-coded colors or fonts. |
+| `<Feature>ViewModel` | Owns the screen state (`idle`, `loading`, `loaded`, `failed`) and the `viewData` variable. Adds each use case result to its own field of `viewData`. | Depends on `<Feature>UseCaseProtocol`, never on a repository. `private(set) var viewData`; the state never carries the ViewData. |
+| `<Feature>ViewData` | Display model held by the view model. One field (and, if needed, one nested type) per use case result. | Value type, `Equatable` and `Sendable`, with `var` fields. Never maps response protocols and never exposes DarIAData types to the view. |
+| `<Feature>UseCase` | Calls the repository through its **public API** and returns **only the data of the response**, mapped out of the DarIAData types into a ViewData field type. | Depends on `<Name>RepositoryProtocol` from `DarIAData`. Never builds or returns the whole ViewData. |
+
+### Initialisers: only the container
+
+`<Feature>View`, `<Feature>ViewModel` and `<Feature>UseCase` receive **only** `dependencies: <Feature>Dependencies`
+in their `init`, and resolve everything else inside it through the container's `resolve…()` functions.
+They never take a use case, repository, view model or view data as an `init` parameter.
+
+```swift
+// View
+init(dependencies: ProfileDependencies) {
+    _viewModel = State(initialValue: dependencies.resolveViewModel())
+}
+
+// ViewModel
+init(dependencies: ProfileDependencies) {
+    self.useCase = dependencies.resolveUseCase()
+}
+
+// UseCase (a Sendable struct: it stores what it resolves, not the container)
+@MainActor
+init(dependencies: ProfileDependencies) {
+    self.repository = dependencies.resolveRepository()
+}
+```
+
+- Naming: every function of the container that hands out a dependency is `resolve<Name>()`. Never `make<Name>()`.
+- To add a dependency: store it as a `private let` in `<Feature>Dependencies`, add `resolve<Name>()`, and resolve it
+  in the `init(dependencies:)` that needs it.
+- The coordinator starts the view with `<Feature>View(dependencies: dependencies)`, and the container builds the
+  others with `<Feature>ViewModel(dependencies: self)` and `<Feature>UseCase(dependencies: self)`.
+- The use case `init` is `@MainActor` because the container is.
+
+### Data flow
+
+```
+View ──▶ ViewModel ──▶ UseCase ──▶ <Name>RepositoryProtocol (DarIAData public API)
+                                        │
+View ◀── ViewModel.viewData ◀── response data ◀── <Name>ResponseProtocol
+            (adds it to a field)   (use case maps it)
+```
+
+### ViewData lives in the view model
+
+The view model owns the screen data as a variable, and each use case only hands it the data of its response:
+
+```swift
+// ViewData: one field per use case result
+struct ProfileViewData: Equatable, Sendable {
+    struct User: Equatable, Sendable { let name: String }
+    var user: User?
+}
+
+// UseCase: returns only the data of the response, mapped out of DarIAData
+func execute() async throws -> ProfileViewData.User {
+    let response = try await repository.fetch(ProfileRequest(), serviceName: serviceName)
+    return ProfileViewData.User(name: response.name)
+}
+
+// ViewModel: keeps the ViewData and adds each result to its own field
+private(set) var state: State = .idle          // idle, loading, loaded, failed
+private(set) var viewData = ProfileViewData()
+
+func load() async {
+    state = .loading
+    do {
+        viewData.user = try await useCase.execute()
+        state = .loaded
+    } catch {
+        state = .failed(error.localizedDescription)
+    }
+}
+```
+
+- A new result never erases the rest of the data: assign only the field of that use case.
+- The view reads `viewModel.viewData` (or view model properties built on it), and switches on `state`
+  only to show loading or error.
+- A screen with several use cases has one field per use case, and may have one `…Loaded` state per result.
+
+### Navigation
+
+- Each coordinator declares `enum Route: Hashable` with one case per child feature, and maps each case
+  to the child's coordinator in `destination(for:)`.
+- A view opens a child feature with `NavigationLink(value: <Parent>Coordinator.Route.<child>) { ... }`.
+- The root feature is started by `App/RootView.swift` inside the `NavigationStack`.
+- Never push with `navigationDestination(item:)` or `isPresented:`: value links pushed on top of those screens are
+  lost. Push every screen with `NavigationLink(value:)` and a route.
+
+### Localisation
+
+- Strings live in `Resources/Localizable.xcstrings`. Keys follow `<featureName>.<element>`, e.g. `profile.title`.
+- Components that show text expose `.localized("key")` (see `Packages/DarIAUI/DESIGN_SYSTEM.md`).
+  A plain SwiftUI `Text` uses `Text(forKey: "key", value: "Default text")`.
+
+### Creating a feature
+
+Use the `daria-new-feature` skill, or run:
+
+```
+python3 scripts/codegen/new_feature.py --name <FeatureName> --parent <ExistingFeature> [--repository <RepositoryName>]
+```
+
+It creates the branch `feature/DarIA-<FeatureName>` from `develop`, the folder and classes above,
+adds the route to the parent coordinator and updates this file.
+
+## Feature registry
+
+<!-- codegen:feature-registry:start -->
+| Feature | Opened from | Repository |
+|---|---|---|
+| `Chat` | — (root) | — |
+<!-- codegen:feature-registry:end -->
+
+## App map
+
+Which feature opens which. `A --> B` means feature A can open feature B.
+
+<!-- codegen:app-map:start -->
+```mermaid
+graph TD
+    Chat
+```
+<!-- codegen:app-map:end -->

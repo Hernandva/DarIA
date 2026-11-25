@@ -1,0 +1,42 @@
+import Foundation
+
+/// Public API of the {{Repo}} repository. Features depend on this protocol, never on the concrete class.
+public protocol {{Repo}}RepositoryProtocol: Sendable {
+    /// Reads the stored value. Throws `LocalStoreError.notFound` when nothing has been saved yet.
+    func fetch() async throws -> any {{Repo}}ResponseProtocol
+    /// Saves the value, replacing the previous one.
+    func save(_ request: some {{Repo}}RequestProtocol) async throws
+    /// Removes the stored value.
+    func delete() async throws
+}
+
+/// Keeps {{Repo}} data on the device with {{StorageName}}, through `Local/{{Repo}}Storage`.
+/// Flow: {{Repo}}RequestProtocol -> {{Repo}}RequestDAO -> {{Repo}}Storage
+///       -> {{Repo}}ResponseDAO -> {{Repo}}ResponseProtocol.
+public final class {{Repo}}Repository: {{Repo}}RepositoryProtocol {
+    private let storage: any {{Repo}}StorageProtocol
+
+    public init() {
+        storage = {{Repo}}Storage()
+    }
+
+    /// Lets tests inject another storage.
+    init(storage: any {{Repo}}StorageProtocol) {
+        self.storage = storage
+    }
+
+    public func fetch() async throws -> any {{Repo}}ResponseProtocol {
+        guard let value = try await storage.load() else {
+            throw LocalStoreError.notFound({{Repo}}Storage.key)
+        }
+        return value
+    }
+
+    public func save(_ request: some {{Repo}}RequestProtocol) async throws {
+        try await storage.save({{Repo}}RequestDAO(request))
+    }
+
+    public func delete() async throws {
+        try await storage.remove()
+    }
+}
