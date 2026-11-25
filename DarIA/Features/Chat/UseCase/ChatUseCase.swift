@@ -126,14 +126,20 @@ private extension ChatUseCase {
 
     static func failure(from error: ChatRepositoryError) -> ChatViewData.ReplyFailure {
         switch error {
-        case .providerUnavailable(.deviceNotEligible): .deviceNotEligible
-        case .providerUnavailable(.notEnabled): .modelDisabled
-        case .providerUnavailable(.modelNotReady): .modelNotReady
+        case .providerUnavailable(let reason): .modelUnavailable(unavailability(from: reason))
         case .contentRejected: .contentRejected
         case .conversationTooLong: .conversationTooLong
         case .unsupportedLanguage: .unsupportedLanguage
         case .imagesNotSupported: .imagesNotSupported
         case .unsupportedProvider, .missingQuestion: .unknown
+        }
+    }
+
+    static func unavailability(from reason: ChatUnavailableReason) -> ChatViewData.ModelUnavailability {
+        switch reason {
+        case .deviceNotEligible: .deviceNotEligible
+        case .notEnabled: .modelDisabled
+        case .modelNotReady: .modelNotReady
         }
     }
 }

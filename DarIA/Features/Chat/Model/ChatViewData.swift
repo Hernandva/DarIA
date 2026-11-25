@@ -16,11 +16,16 @@ struct ChatViewData: Equatable, Sendable {
         case user
     }
 
-    /// Why the assistant could not answer. Shown in the conversation instead of a reply.
-    enum ReplyFailure: Error, Equatable, Sendable {
+    /// Why the model of the connection cannot answer right now, whatever the question.
+    enum ModelUnavailability: Equatable, Sendable {
         case deviceNotEligible
         case modelDisabled
         case modelNotReady
+    }
+
+    /// Why the assistant could not answer. Shown in the conversation instead of a reply.
+    enum ReplyFailure: Error, Equatable, Sendable {
+        case modelUnavailable(ModelUnavailability)
         case contentRejected
         case conversationTooLong
         case unsupportedLanguage

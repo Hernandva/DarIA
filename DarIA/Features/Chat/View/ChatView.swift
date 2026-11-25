@@ -58,7 +58,7 @@ private extension ChatView {
                         .padding(.top, viewModel.startsGroup(message) ? DSSpacing.small : 0)
                 }
                 if let failure = viewModel.attachmentFailure {
-                    DSChatNotice().localized(Self.key(for: failure))
+                    DSChatNotice(Self.text(for: failure))
                         .padding(.top, DSSpacing.small)
                 }
                 if viewModel.isReplying {
@@ -83,7 +83,7 @@ private extension ChatView {
                     .localized("chat.attachment.image")
             }
             if let failure = message.failure {
-                DSChatNotice().localized(Self.key(for: failure))
+                DSChatNotice(Self.text(for: failure))
             } else if !message.text.isEmpty {
                 DSChatBubble(message.text, role: role)
             }
@@ -167,17 +167,27 @@ private extension ChatView {
         return String(format: format, viewModel.connection?.name ?? "")
     }
 
+    static func text(for failure: ChatViewData.ReplyFailure) -> String {
+        String(localized: String.LocalizationValue(key(for: failure)))
+    }
+
     static func key(for failure: ChatViewData.ReplyFailure) -> String {
         switch failure {
-        case .deviceNotEligible: "chat.error.deviceNotEligible"
-        case .modelDisabled: "chat.error.modelDisabled"
-        case .modelNotReady: "chat.error.modelNotReady"
+        case .modelUnavailable(let unavailability): key(for: unavailability)
         case .contentRejected: "chat.error.contentRejected"
         case .conversationTooLong: "chat.error.conversationTooLong"
         case .unsupportedLanguage: "chat.error.unsupportedLanguage"
         case .imagesNotSupported: "chat.error.imagesNotSupported"
         case .imageUnreadable: "chat.error.imageUnreadable"
         case .unknown: "chat.error.unknown"
+        }
+    }
+
+    static func key(for unavailability: ChatViewData.ModelUnavailability) -> String {
+        switch unavailability {
+        case .deviceNotEligible: "chat.error.deviceNotEligible"
+        case .modelDisabled: "chat.error.modelDisabled"
+        case .modelNotReady: "chat.error.modelNotReady"
         }
     }
 }

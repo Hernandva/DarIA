@@ -11,7 +11,8 @@ Humans and coding agents must follow this file; the `daria-new-repo` skill keeps
 Sources/DarIAData/
 ├── Core/                       # code shared by every repository
 │   ├── Remote/                 # NetworkClient (Alamofire), RepositoryConfiguration, NetworkError
-│   └── Local/                  # LocalStore and its backends: JSONFileStore, UserDefaultsStore, KeychainStore
+│   ├── Local/                  # LocalStore and its backends: JSONFileStore, UserDefaultsStore, KeychainStore
+│   └── Log/                    # DataLogger: logs of the repositories, only in Debug builds
 └── Repositories/
     └── <Name>/                 # one folder per repository
         ├── <Name>Repository.swift
@@ -36,6 +37,17 @@ Sources/DarIAData/
 - The app only sees **public** types: the repository API and the request/response protocols.
 - Wire and stored formats are **DAOs**, which are `internal`, so they never leave the package.
 - Never put secrets (API keys, client secrets, tokens) in the source.
+
+## Logging
+
+- `Core/Log/DataLogger` writes to the unified log (`os.Logger`) under the app's bundle identifier, with one
+  category per repository: `DataLogger(category: "<repository>")`, kept as a `static let log` of the repository.
+- Logs exist only in Debug builds: the body of every call is inside `#if DEBUG`, so Release builds log nothing.
+- Each public API call of a repository logs `success(_:)` when it ends well and `failure(_:error:)` when it throws,
+  with what helps to follow it: the service or provider, how long it took, counts and sizes.
+- Never log what the user wrote, what a service returned as content, tokens, keys or personal data.
+- Read them in the Xcode console, or in Console.app filtered by the subsystem (the bundle identifier) and the
+  category.
 
 ## Anatomy of a repository
 

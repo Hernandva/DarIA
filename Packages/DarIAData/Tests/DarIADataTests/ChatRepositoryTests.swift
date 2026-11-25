@@ -35,6 +35,12 @@ struct ChatRepositoryTests {
         #expect(received.hasImages)
     }
 
+    @Test func registersAServiceForEveryProvider() {
+        let registered = Set(ChatRepository.defaultServices.keys)
+
+        #expect(registered == Set(ChatProvider.Kind.allCases))
+    }
+
     @Test func throwsWhenTheProviderHasNoService() async {
         let repository = ChatRepository(services: [:])
         let request = ChatRequestStub(messages: [ChatMessageStub(role: .user, text: "Hi")])
